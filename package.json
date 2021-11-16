@@ -1,0 +1,23 @@
+{
+  "name": "iottermproject",
+  "version": "1.0.0",
+  "description": "IDE for development of IoT Applications using Atlas Framework",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "electron ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kamilcaputis/IoTTermProject.git"
+  },
+  "author": "Mahan Mahtabfar",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/kamilcaputis/IoTTermProject/issues"
+  },
+  "homepage": "https://github.com/kamilcaputis/IoTTermProject#readme",
+  "devDependencies": {
+    "electron": "^16.0.0"
+  }
+}
