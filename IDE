@@ -1,16 +1,19 @@
 import tkinter as tk
 from tkinter import ttk
-from tkinter.filedialog import asksaveasfilename, askopenfilename
+from tkinter.filedialog import asksaveasfilename, askopenfilename, askdirectory
+from iot_app import load_apps_from_directory
 import subprocess
 import os
 import socket
 import json
+import glob
 
 main_window = tk.Tk()
-main_window.geometry()
 main_window.title('Group 16 IDE')
 file_path = ''
 
+# this is a stringvar type that is used by Tkinter
+current_working_directory = os.getcwd()
 
 def set_file_path(path):
     global file_path
@@ -106,7 +109,15 @@ def listen():
             json_data = json.loads(response)
         finally:
             s.close()
-  
+            
+def set_current_working_directory():
+    chosen_directory = askdirectory()
+
+    if chosen_directory == '' or chosen_directory == None:
+        return
+
+    global cwd_label
+    cwd_label.configure(text=f"Current Directory: {chosen_directory}")
 
 menu_bar = tk.Menu(main_window)
 
@@ -156,7 +167,16 @@ clear_btn.pack(side=tk.LEFT, expand=True, fill="x")
 
 editor_bottom_frame.pack(side=tk.BOTTOM, fill="x", expand=False)
 
-# code_output = Text(master=recipe_tab, height=10)
-# code_output.pack()
+#update the idle-tasks so that the wraplength will work
+main_window.update_idletasks()
+
+#apps_tab
+cwd_label = tk.Label(apps_tab, text=f"Current Directory: {current_working_directory}", justify=tk.CENTER, wraplength=left_frame.winfo_width() - 40)
+cwd_button =tk.Button(apps_tab, text="Change Directory", command=set_current_working_directory)
+cwd_label.pack()
+cwd_button.pack()
+
+#place widgets for apps in the current directory into the apps tab
+load_apps_from_directory(current_working_directory, apps_tab)
 
 main_window.mainloop()
