@@ -51,10 +51,10 @@ def save():
         set_file_path(path)
         json_obj = json.loads(file.read())
         
-    json_obj["recipe_code"] = code
+    json_obj["recipe_code"] = code.strip()
 
     with open(path, "w") as file:
-        json_obj = json.dump(json_obj, file)
+        json.dump(json_obj, file)
 
 def save_as():
     path = asksaveasfilename(filetypes=[('Python Files', '*.py')])

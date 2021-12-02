@@ -32,7 +32,7 @@ def load_services_from_tweets(tweet_list, master_widget):
     for frame in frames:
         frame.pack()
     
-    master_widget.after(5000, lambda: load_services_from_tweets(tweet_list, master_widget))
+    master_widget.after(500, lambda: load_services_from_tweets(tweet_list, master_widget))
 
 def load_thing_selection_filter_from_tweets(tweet_list, master_widget):
     
