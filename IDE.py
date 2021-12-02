@@ -7,7 +7,7 @@ from tkinter import ttk
 from listen import TweetThread
 from iot_app import load_apps_from_directory
 from iot_things import load_things_from_tweets
-from iot_services import load_services_from_tweets
+from iot_services import load_services_from_tweets, load_thing_selection_filter_from_tweets
 from iot_relationships import load_relationships_from_tweets
 from tkinter.filedialog import asksaveasfilename, askopenfilename, askdirectory
 
@@ -197,7 +197,11 @@ cwd_button.pack(side=tk.BOTTOM)
 load_apps_from_directory(current_working_directory, apps_tab, editor, set_file_path)
 
 #services tab
-load_thing_filter_selection_from_tweets(tweet_list, services_tab)
+filter_selection_label = tk.Label(services_tab, text="Filter By Thing ID", justify=tk.CENTER)
+filter_selection_label.pack()
+load_thing_selection_filter_from_tweets(tweet_list, services_tab)
+service_list_label = tk.Label(services_tab, text="Service List:", justify=tk.CENTER)
+service_list_label.pack()
 load_services_from_tweets(tweet_list, services_tab)
 
 #things tab
