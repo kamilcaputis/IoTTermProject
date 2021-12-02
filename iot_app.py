@@ -42,7 +42,6 @@ def _open_app(editor, new_file_path, set_file_path):
 def _replace_editor_text(editor, text):
     editor.delete("1.0", tk.END)
     editor.insert("1.0", text)
-    print("here")
         
 #get numpy array from json file
 def _load_numpy_image(filepath):

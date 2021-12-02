@@ -1,21 +1,27 @@
+import os
+import json
+import socket
+import subprocess
 import tkinter as tk
 from tkinter import ttk
-from tkinter.filedialog import asksaveasfilename, askopenfilename, askdirectory
+from listen import TweetThread
 from iot_app import load_apps_from_directory
-from iot_services import listen_for_services
-import subprocess
-import os
-import socket
-import json
-import glob
+from iot_things import load_things_from_tweets
+from iot_services import load_services_from_tweets
+from iot_relationships import load_relationships_from_tweets
+from tkinter.filedialog import asksaveasfilename, askopenfilename, askdirectory
+
+#queue to hold tweet json's
+tweet_list = []
+
+#start the thread, it will place its output
+# in this queue for us to consume
+tweet_thread = TweetThread(tweet_list)
+tweet_thread.start()
 
 main_window = tk.Tk()
 main_window.title('Group 16 IDE')
 file_path = ''
-
-
-#listen for the services
-services = listen_for_services()
 
 # this is a stringvar type that is used by Tkinter
 current_working_directory = os.getcwd()
@@ -89,7 +95,6 @@ def finalize_callback():
     
 def clear_callback():
     editor.delete('1.0', tk.END)
-    pass
 
 #This function is called when the recipe option is selected from the overhead menu
 def recipe():
@@ -190,5 +195,15 @@ cwd_button.pack(side=tk.BOTTOM)
 
 #place widgets for apps in the current directory into the apps tab
 load_apps_from_directory(current_working_directory, apps_tab, editor, set_file_path)
+
+#services tab
+load_thing_filter_selection_from_tweets(tweet_list, services_tab)
+load_services_from_tweets(tweet_list, services_tab)
+
+#things tab
+load_things_from_tweets(tweet_list, things_tab)
+
+#relationships tab
+load_relationships_from_tweets(tweet_list, relationships_tab)
 
 main_window.mainloop()
