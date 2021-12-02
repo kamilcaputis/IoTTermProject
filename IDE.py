@@ -2,10 +2,11 @@ import os
 import json
 import socket
 import subprocess
+from subprocess import check_output
 import tkinter as tk
 from tkinter import ttk
 from listen import TweetThread
-from iot_app import load_apps_from_directory, write_python_code
+from iot_app import load_apps_from_directory, load_python_code_from_file, write_python_code
 from iot_things import load_things_from_tweets
 from iot_services import load_services_from_tweets, load_thing_selection_filter_from_tweets
 from iot_relationships import load_relationships_from_tweets
@@ -65,16 +66,25 @@ def save_as():
 
 
 def activate():
+    global file_path
     if file_path == '':
         save_prompt = tk.Toplevel()
         text = tk.Label(save_prompt, text='Please save your code')
         text.pack()
         return
-    command = f'python {file_path}'
-    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-    output, error = process.communicate()
-    tk.code_output.insert(tk.END, output)
-    tk.code_output.insert(tk.END,  error)
+
+    code = load_python_code_from_file(file_path)
+    print(code)
+    out = check_output(["python3", "-c", code])
+    print(out)
+
+    result_popup = tk.Toplevel(main_window)
+    result_popup.geometry("500x500")
+
+    result_popup.update_idletasks()
+
+    result_text = tk.Label(master = result_popup, text = str(out).strip(), wraplength=result_popup.winfo_width() - 40)
+    result_text.pack(side=tk.TOP)
 
 def stop():
   print("hi")
@@ -97,23 +107,16 @@ def finalize_callback():
     service_names = parse_service_names(editor_code)
     print(service_names)
 
-    thing_ids = get_thing_ids(service_names)
-    print(thing_ids)
+    ti_sn_pairs = get_pairs(service_names)
+    print(ti_sn_pairs)
 
-    # app_code = f"""
-    # t = {{ "Tweet Type" : "Service call", "Thing ID" : {thingId}, "Space ID" : "Team16Smartspace", "Service Name" : {serviceName}, "Service Inputs" : "(0)"
-    #     }}
-    # data = json.dumps(t, indent=2)
-    # s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    # try: 
-    #     s.connect(("192.168.137.160", 6668))
-    #     s.send(data.encode())
-    #     response = s.recv(1024).decode("utf-8")
-    #     json_data = json.loads(response)
-    #     print(json_data)
-    # finally:
-    #     s.close()"""
-    #write_python_code(file_path, app_code)
+    app_code = "import json\nimport socket\n"
+    for pair in ti_sn_pairs:
+        app_code += f"""t = {{ "Tweet Type" : "Service call", "Thing ID" : "{pair[0]}", "Space ID" : "Team16Smartspace", "Service Name" : "{pair[1]}", "Service Inputs" : "()"}}\ndata = json.dumps(t, indent=2)\ns = socket.socket(socket.AF_INET, socket.SOCK_STREAM)\ntry:\n\ts.connect(("169.254.196.120", 6668))\n\ts.send(data.encode())\n\tresponse = s.recv(1024).decode("utf-8")\n\tjson_data = json.loads(response)\n\tprint(json_data)\nfinally:\n\ts.close()\n"""
+
+    write_python_code(file_path, app_code)
+    # clear_callback()
+    # editor.insert("1.0", app_code)
 
 def parse_service_names(code):
 
@@ -128,14 +131,14 @@ def parse_service_names(code):
 
     return retVal
 
-def get_thing_ids(service_names):
+def get_pairs(service_names):
 
     retVal = []
 
     for service_name in service_names:
         for tweet_dict in [x for x in tweet_list if x["Tweet Type"] == "Service"]:
             if tweet_dict["Name"] == service_name:
-                retVal.append(tweet_dict["Thing ID"])
+                retVal.append((tweet_dict["Thing ID"], service_name))
     
     return retVal
 
@@ -178,12 +181,7 @@ file_menu.add_command(label='Save', command=save)
 file_menu.add_command(label='Save As', command=save_as)
 file_menu.add_command(label='Stop', command=stop)
 file_menu.add_command(label='Delete', command=delete)
-file_menu.add_command(label='Exit', command=exit)
 menu_bar.add_cascade(label='Application Manager', menu=file_menu)
-
-run_bar = tk.Menu(menu_bar, tearoff=0)
-run_bar.add_command(label='Run', command=activate)
-menu_bar.add_cascade(label='Run', menu=run_bar)
 
 main_window.config(menu=menu_bar)
 
@@ -235,12 +233,19 @@ filter_selection_label.pack()
 load_thing_selection_filter_from_tweets(tweet_list, services_tab)
 service_list_label = tk.Label(services_tab, text="Service List:", justify=tk.CENTER)
 service_list_label.pack()
-load_services_from_tweets(tweet_list, services_tab)
+load_services_from_tweets(tweet_list, services_tab, editor)
 
 #things tab
 load_things_from_tweets(tweet_list, things_tab)
 
 #relationships tab
-load_relationships_from_tweets(tweet_list, relationships_tab)
+temp_frame = tk.Frame(relationships_tab)
+temp_label = tk.Label(temp_frame, text="Temp Relationship")
+temp_label.pack()
+temp_frame.pack()
+#load_relationships_from_tweets(tweet_list, relationships_tab)
+
+# code_output = Text(master=recipe_tab, height=10)
+# code_output.pack()
 
 main_window.mainloop()

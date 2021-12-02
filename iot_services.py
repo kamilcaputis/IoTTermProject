@@ -3,7 +3,7 @@ from tkinter.constants import W
 
 #takes as input a list of json dicts describing tweets and
 #creates frame with the service name and pack it on the services tab
-def load_services_from_tweets(tweet_list, master_widget):
+def load_services_from_tweets(tweet_list, master_widget, editor):
     
     #erase the old frames first!!!
     for widget in master_widget.winfo_children():
@@ -26,13 +26,19 @@ def load_services_from_tweets(tweet_list, master_widget):
     for service_dict in [x for x in tweet_list if x["Tweet Type"] == "Service" and x["Thing ID"] in selected_services]:
         temp_frame = tk.Frame(master_widget)
         temp_label = tk.Label(temp_frame, text=service_dict["Name"] + " - " + service_dict["Thing ID"])
+        temp_label.bind("<Button-1>", lambda e: _insert_service_name_on_editor(editor, "evaluate(" + service_dict["Name"] + ")"))
         temp_label.pack(side=tk.LEFT)
         frames.append(temp_frame)
         
     for frame in frames:
         frame.pack()
     
-    master_widget.after(500, lambda: load_services_from_tweets(tweet_list, master_widget))
+    master_widget.after(500, lambda: load_services_from_tweets(tweet_list, master_widget, editor))
+
+def _insert_service_name_on_editor(editor, text):
+    print(f"inserting: {text} on editor at cursor")
+    cursor_index = editor.index(tk.INSERT)
+    editor.insert(cursor_index, text)
 
 def load_thing_selection_filter_from_tweets(tweet_list, master_widget):
     
