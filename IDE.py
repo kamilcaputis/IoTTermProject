@@ -5,7 +5,7 @@ import subprocess
 import tkinter as tk
 from tkinter import ttk
 from listen import TweetThread
-from iot_app import load_apps_from_directory
+from iot_app import load_apps_from_directory, write_python_code
 from iot_things import load_things_from_tweets
 from iot_services import load_services_from_tweets
 from iot_relationships import load_relationships_from_tweets
@@ -91,8 +91,55 @@ def delete():
 
 #callbacks for buttons on the recipe window
 def finalize_callback():
-    pass
+    global file_path
+
+    editor_code = editor.get("1.0", tk.END)
+    service_names = parse_service_names(editor_code)
+    print(service_names)
+
+    thing_ids = get_thing_ids(service_names)
+    print(thing_ids)
+
+    # app_code = f"""
+    # t = {{ "Tweet Type" : "Service call", "Thing ID" : {thingId}, "Space ID" : "Team16Smartspace", "Service Name" : {serviceName}, "Service Inputs" : "(0)"
+    #     }}
+    # data = json.dumps(t, indent=2)
+    # s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    # try: 
+    #     s.connect(("192.168.137.160", 6668))
+    #     s.send(data.encode())
+    #     response = s.recv(1024).decode("utf-8")
+    #     json_data = json.loads(response)
+    #     print(json_data)
+    # finally:
+    #     s.close()"""
+    #write_python_code(file_path, app_code)
+
+def parse_service_names(code):
+
+    retVal = []
+
+    while "(" in code:
+        startIndex = code.find('(')
+        endIndex = code.find(')')
+        token = code[startIndex + 1 :endIndex]
+        retVal.append(token)
+        code = code[endIndex + 1:]
+
+    return retVal
+
+def get_thing_ids(service_names):
+
+    retVal = []
+
+    for service_name in service_names:
+        for tweet_dict in [x for x in tweet_list if x["Tweet Type"] == "Service"]:
+            if tweet_dict["Name"] == service_name:
+                retVal.append(tweet_dict["Thing ID"])
     
+    return retVal
+
+
 def clear_callback():
     editor.delete('1.0', tk.END)
 
@@ -112,20 +159,6 @@ def recipe():
     text.pack()
     finalize_btn.pack()
     clear_btn.pack()
-
-def listen():
-  while True:
-        t = { "Tweet Type" : "Service call", "Thing ID" : "MySmartThing01", "Space ID" : "MySmartSpace", "Service Name" : "Counter", "Service Inputs" : "()"
-        }
-        data = json.dumps(t, indent=2)
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        try: 
-            s.connect(("192.168.137.160", 6668))
-            s.send(data.encode())
-            response = s.recv(1024).decode("utf-8")
-            json_data = json.loads(response)
-        finally:
-            s.close()
             
 def set_current_working_directory():
     chosen_directory = askdirectory()
@@ -197,7 +230,7 @@ cwd_button.pack(side=tk.BOTTOM)
 load_apps_from_directory(current_working_directory, apps_tab, editor, set_file_path)
 
 #services tab
-load_thing_filter_selection_from_tweets(tweet_list, services_tab)
+# load_thing_filter_selection_from_tweets(tweet_list, services_tab)
 load_services_from_tweets(tweet_list, services_tab)
 
 #things tab

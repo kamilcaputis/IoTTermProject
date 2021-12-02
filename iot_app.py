@@ -65,4 +65,15 @@ def load_recipe_code_from_file(filepath):
     with open(filepath, "r") as f:
         json_obj = json.load(f)
         return json_obj["recipe_code"]
+
+def write_python_code(filepath, code):
+
+    json_obj = {}
+
+    with open(filepath, "r") as f:
+        json_obj = json.load(f)
+        json_obj["code"] = code.strip()
+    
+    with open(filepath, "w") as f:
+        json.dump(json_obj, f)
     
