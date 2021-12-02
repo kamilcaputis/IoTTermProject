@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter.filedialog import asksaveasfilename, askopenfilename, askdirectory
 from iot_app import load_apps_from_directory
+from iot_services import listen_for_services
 import subprocess
 import os
 import socket
@@ -12,13 +13,16 @@ main_window = tk.Tk()
 main_window.title('Group 16 IDE')
 file_path = ''
 
+
+#listen for the services
+services = listen_for_services()
+
 # this is a stringvar type that is used by Tkinter
 current_working_directory = os.getcwd()
 
 def set_file_path(path):
     global file_path
     file_path = path
-#listen 
 
 def open_file():
     path = askopenfilename(filetypes=[('Python Files', '*.py')])
@@ -29,14 +33,22 @@ def open_file():
         set_file_path(path)
 
 def save():
+    json_obj = {}
     if file_path == '':
         path = asksaveasfilename(filetypes=[('Python Files', '*.py')])
     else:
         path = file_path
-    with open(path, 'w') as file:
-        code = editor.get('1.0', tk.END)
-        file.write(code)
+    
+    code = editor.get('1.0', tk.END)
+        
+    with open(path, 'r') as file:
         set_file_path(path)
+        json_obj = json.loads(file.read())
+        
+    json_obj["recipe_code"] = code
+
+    with open(path, "w") as file:
+        json_obj = json.dump(json_obj, file)
 
 def save_as():
     path = asksaveasfilename(filetypes=[('Python Files', '*.py')])
@@ -174,9 +186,9 @@ main_window.update_idletasks()
 cwd_label = tk.Label(apps_tab, text=f"Current Directory: {current_working_directory}", justify=tk.CENTER, wraplength=left_frame.winfo_width() - 40)
 cwd_button =tk.Button(apps_tab, text="Change Directory", command=set_current_working_directory)
 cwd_label.pack()
-cwd_button.pack()
+cwd_button.pack(side=tk.BOTTOM)
 
 #place widgets for apps in the current directory into the apps tab
-load_apps_from_directory(current_working_directory, apps_tab)
+load_apps_from_directory(current_working_directory, apps_tab, editor, set_file_path)
 
 main_window.mainloop()
